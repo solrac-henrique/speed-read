@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="title">Leitor Rápido - RSVP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="container">
+    <!-- Topo com tema e idioma -->
+    <div class="top-bar">
+      <h1>⚡ <span data-i18n="title">Leitor Rápido</span></h1>
+      <div class="top-controls">
+        <select id="langSelector">
+          <option value="pt">🇧🇷 Português</option>
+          <option value="en">🇺🇸 English</option>
+          <option value="es">🇪🇸 Español</option>
+        </select>
+        <button id="themeToggle" title="Alternar tema">🌙</button>
+      </div>
+    </div>
+
+    <!-- Upload de arquivos -->
+    <div class="upload-area">
+      <input type="file" id="fileInput" accept=".txt,.pdf" />
+      <label for="fileInput" data-i18n="upload">📤 Carregar arquivo (.txt ou .pdf)</label>
+    </div>
+
+    <!-- Área de texto -->
+    <textarea id="textInput" placeholder="Cole seu texto aqui..." data-i18n-placeholder="placeholder"></textarea>
+
+    <!-- Controles -->
+    <div class="controls">
+      <label>
+        <span data-i18n="speed">Velocidade (palavras/min):</span>
+        <input type="range" id="speedControl" min="100" max="800" value="300" />
+        <span id="speedDisplay">300</span>
+      </label>
+
+      <div class="buttons">
+        <button id="playBtn" data-i18n="play">▶ Play</button>
+        <button id="pauseBtn" data-i18n="pause">⏸ Pause</button>
+        <button id="resetBtn" data-i18n="reset">⏹ Reset</button>
+        <button id="saveHistoryBtn" data-i18n="save">💾 Salvar</button>
+      </div>
+    </div>
+
+    <!-- Display da palavra atual -->
+    <div id="wordDisplay">📖 Clique em Play</div>
+
+    <!-- Progresso -->
+    <div class="progress">
+      <span id="progressText">0 / 0</span>
+      <div id="progressBar"><div id="progressFill"></div></div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="history-section">
+      <h3 data-i18n="history">📚 Histórico de leituras</h3>
+      <ul id="historyList"></ul>
+      <button id="clearHistoryBtn" data-i18n="clear">🗑️ Limpar histórico</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="i18n.js"></script>
+  <script src="pdf-reader.js"></script>
+  <script src="history.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
