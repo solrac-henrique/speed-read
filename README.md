@@ -28,4 +28,4 @@ Leitor de texto acelerado usando a técnica **RSVP** (Rapid Serial Visual Presen
 
 ## 🌐 Demo
 
-[Link do GitHub Pages em breve]
+[[Link do GitHub Pages em breve]](https://solrac-henrique.github.io/speed-read/)
