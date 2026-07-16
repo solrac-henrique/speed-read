@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Speed Read - Modo Kindle</title>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         :root {
             --bg: #f5f0e8;
@@ -33,7 +34,6 @@
             padding: 20px;
         }
 
-        /* Efeito de textura de papel */
         body::before {
             content: '';
             position: fixed;
@@ -65,7 +65,6 @@
             flex-direction: column;
         }
 
-        /* Barra superior estilo Kindle */
         .kindle-header {
             display: flex;
             align-items: center;
@@ -97,7 +96,6 @@
 
         .kindle-icon:hover { color: var(--texto); }
 
-        /* Área de leitura */
         .reader-area {
             flex: 1;
             display: flex;
@@ -109,7 +107,6 @@
             position: relative;
         }
 
-        /* Palavra atual - ESTILO KINDLE */
         .word-display {
             text-align: center;
             transition: all 0.1s ease;
@@ -135,7 +132,6 @@
             min-height: 24px;
         }
 
-        /* Indicador de posição */
         .position-indicator {
             display: flex;
             align-items: center;
@@ -146,21 +142,6 @@
             letter-spacing: 0.5px;
         }
 
-        .progress-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--dourado);
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
-
-        .progress-dot.active {
-            width: 8px;
-            height: 8px;
-            background: var(--destaque);
-        }
-
-        /* Barra de progresso estilo Kindle */
         .kindle-progress {
             width: 100%;
             padding: 0 24px 14px;
@@ -181,7 +162,6 @@
             transition: width 0.3s ease;
         }
 
-        /* Controles */
         .controls-area {
             display: flex;
             align-items: center;
@@ -268,7 +248,83 @@
             border-color: #c4b59a;
         }
 
-        /* Input de texto */
+        /* Upload PDF */
+        .upload-area {
+            padding: 16px 24px;
+            border-top: 1px solid var(--borda);
+            background: #fdfbf6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .upload-label {
+            font-size: 0.75rem;
+            color: var(--texto-claro);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .btn-upload {
+            background: var(--card);
+            border: 1px dashed var(--dourado);
+            color: var(--destaque);
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-upload:hover {
+            background: #fdf8ef;
+            border-color: var(--destaque);
+        }
+
+        .file-name {
+            font-size: 0.8rem;
+            color: var(--texto-claro);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .loading-indicator {
+            display: none;
+            font-size: 0.8rem;
+            color: var(--dourado);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Área de texto */
         .text-input-area {
             padding: 20px 24px;
             border-top: 1px solid var(--borda);
@@ -302,7 +358,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Responsivo */
         @media (max-width: 600px) {
             .kindle-container {
                 border-radius: 0;
@@ -335,6 +390,17 @@
                 <span class="kindle-icon" title="Ajustar fonte" onclick="changeFont()">𝐀</span>
                 <span class="kindle-icon" title="Modo claro/escuro" onclick="toggleTheme()">☀️</span>
             </div>
+        </div>
+
+        <!-- Upload de PDF -->
+        <div class="upload-area">
+            <span class="upload-label">📄 PDF:</span>
+            <div class="file-input-wrapper">
+                <button class="btn-upload">📂 Selecionar PDF</button>
+                <input type="file" id="pdfInput" accept=".pdf" onchange="handlePDFUpload(event)">
+            </div>
+            <span class="file-name" id="fileName">Nenhum arquivo</span>
+            <span class="loading-indicator" id="loadingIndicator">⏳ Extraindo texto...</span>
         </div>
 
         <!-- Área de leitura -->
@@ -378,7 +444,7 @@
 
         <!-- Entrada de texto -->
         <div class="text-input-area">
-            <label>📝 Cole ou digite seu texto para leitura rápida:</label>
+            <label>📝 Digite ou cole seu texto (ou carregue um PDF acima):</label>
             <textarea id="textInput" placeholder="Digite ou cole seu texto aqui... O Speed Read exibirá uma palavra por vez para leitura rápida.">O Speed Read é uma técnica revolucionária de leitura dinâmica. Em vez de mover os olhos linha por linha, você recebe uma palavra de cada vez no centro da tela. Isso elimina o tempo perdido com movimentos oculares e aumenta drasticamente sua velocidade de leitura. Experimente ajustar a velocidade e descubra seu ritmo ideal. Com prática constante, você pode triplicar sua velocidade de leitura mantendo total compreensão do texto.</textarea>
         </div>
 
@@ -386,21 +452,71 @@
 
     <script>
         // ============================================
-        // SPEED READ - MODO KINDLE
+        // SPEED READ - MODO KINDLE COM PDF
         // ============================================
+
+        // Configurar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         var words = [];
         var currentIndex = 0;
         var isPlaying = false;
-        var speed = 300; // Palavras por minuto
+        var speed = 300;
         var intervalId = null;
         var currentFontSize = 4.5;
         var isDarkMode = false;
 
+        // ========== LEITURA DE PDF ==========
+        async function handlePDFUpload(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('loadingIndicator').style.display = 'inline';
+            
+            stopReading();
+
+            try {
+                var arrayBuffer = await file.arrayBuffer();
+                var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                var fullText = '';
+                
+                for (var i = 1; i <= pdf.numPages; i++) {
+                    var page = await pdf.getPage(i);
+                    var textContent = await page.getTextContent();
+                    var pageText = textContent.items.map(function(item) {
+                        return item.str;
+                    }).join(' ');
+                    fullText += pageText + ' ';
+                }
+
+                fullText = fullText.replace(/\s+/g, ' ').trim();
+
+                if (fullText.length === 0) {
+                    alert('⚠️ Não foi possível extrair texto deste PDF. O arquivo pode ser uma imagem escaneada.');
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('textInput').value = fullText;
+                loadText();
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                showToast('✅ PDF carregado! ' + words.length + ' palavras extraídas.');
+
+            } catch (error) {
+                console.error('Erro ao ler PDF:', error);
+                alert('❌ Erro ao processar o PDF. Verifique se o arquivo é válido.');
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+
+        // ========== LEITURA DE TEXTO ==========
         function loadText() {
             var text = document.getElementById('textInput').value.trim();
             if (!text) {
-                words = ['Digite', 'ou', 'cole', 'seu', 'texto', 'acima', 'para', 'começar', 'a', 'leitura', 'rápida.'];
+                words = ['Digite', 'ou', 'cole', 'seu', 'texto', 'ou', 'carregue', 'um', 'PDF', 'para', 'começar'];
             } else {
                 words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
             }
@@ -418,7 +534,7 @@
             
             if (currentIndex >= words.length) {
                 document.getElementById('currentWord').textContent = 'Fim!';
-                document.getElementById('wordContext').textContent = 'Texto concluído com sucesso';
+                document.getElementById('wordContext').textContent = '📖 Texto concluído com sucesso';
                 stopReading();
                 return;
             }
@@ -426,7 +542,6 @@
             var word = words[currentIndex];
             document.getElementById('currentWord').textContent = word;
             
-            // Contexto (palavra anterior e próxima)
             var prev = currentIndex > 0 ? words[currentIndex - 1] + ' ' : '';
             var next = currentIndex < words.length - 1 ? ' ' + words[currentIndex + 1] : '';
             document.getElementById('wordContext').textContent = prev + '...' + next;
@@ -438,7 +553,6 @@
             if (words.length === 0) return;
             var progress = (currentIndex / words.length) * 100;
             document.getElementById('progressFill').style.width = progress + '%';
-            document.getElementById('wordCount').textContent = words.length;
         }
 
         function nextWord() {
@@ -462,9 +576,10 @@
             if (currentIndex >= words.length - 1) currentIndex = 0;
             
             isPlaying = true;
-            document.getElementById('playBtn').textContent = '⏸ Pausar';
-            document.getElementById('playBtn').style.background = '#8b6914';
-            document.getElementById('playBtn').style.color = '#faf7f0';
+            var playBtn = document.getElementById('playBtn');
+            playBtn.textContent = '⏸ Pausar';
+            playBtn.style.background = '#8b6914';
+            playBtn.style.color = '#faf7f0';
             
             var interval = Math.round(60000 / speed);
             
@@ -479,9 +594,10 @@
         function stopReading() {
             isPlaying = false;
             clearInterval(intervalId);
-            document.getElementById('playBtn').textContent = '▶ Iniciar';
-            document.getElementById('playBtn').style.background = '#382d1f';
-            document.getElementById('playBtn').style.color = '#faf7f0';
+            var playBtn = document.getElementById('playBtn');
+            playBtn.textContent = '▶ Iniciar';
+            playBtn.style.background = '#382d1f';
+            playBtn.style.color = '#faf7f0';
         }
 
         function togglePlay() {
@@ -526,7 +642,7 @@
 
         function toggleTheme() {
             var root = document.documentElement;
-            var icon = document.querySelector('.kindle-icon:last-child');
+            var icon = document.querySelector('.kindle-icons .kindle-icon:last-child');
             
             if (!isDarkMode) {
                 root.style.setProperty('--bg', '#1a1a1a');
@@ -538,6 +654,7 @@
                 root.style.setProperty('--destaque', '#d4a84b');
                 icon.textContent = '🌙';
                 document.querySelector('.text-input-area').style.background = '#222';
+                document.querySelector('.upload-area').style.background = '#222';
                 document.querySelector('textarea').style.background = '#2a2a2a';
                 document.querySelector('textarea').style.color = '#d4c5b2';
             } else {
@@ -550,20 +667,38 @@
                 root.style.setProperty('--destaque', '#8b6914');
                 icon.textContent = '☀️';
                 document.querySelector('.text-input-area').style.background = '#fdfbf6';
+                document.querySelector('.upload-area').style.background = '#fdfbf6';
                 document.querySelector('textarea').style.background = '#faf7f0';
                 document.querySelector('textarea').style.color = '#382d1f';
             }
             isDarkMode = !isDarkMode;
         }
 
-        // Atualiza ao digitar
+        function showToast(msg) {
+            var toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#382d1f;color:#faf7f0;padding:12px 24px;border-radius:8px;font-size:0.85rem;z-index:999;animation:fadeInOut 2.5s forwards;font-family:Inter,sans-serif;';
+            document.body.appendChild(toast);
+            
+            var style = document.createElement('style');
+            style.textContent = '@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(20px)}20%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}';
+            document.head.appendChild(style);
+            
+            setTimeout(function() {
+                toast.remove();
+                style.remove();
+            }, 2500);
+        }
+
+        // Event listeners
         document.getElementById('textInput').addEventListener('input', function() {
             stopReading();
             loadText();
         });
 
-        // Teclas de atalho
         document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'TEXTAREA') return;
+            
             if (e.key === ' ') {
                 e.preventDefault();
                 togglePlay();
@@ -580,12 +715,15 @@
             }
         });
 
-        // Inicialização
         function init() {
             loadText();
             document.getElementById('speedDisplay').textContent = speed;
-            document.getElementById('wordCount').textContent = words.length;
         }
+
+        init();
+    </script>
+</body>
+</html>
 
         init();
     </script>
